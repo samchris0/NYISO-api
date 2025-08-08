@@ -1,3 +1,5 @@
 .env
 log.log
 clean_up.py
+venv/
+__pychache__/
