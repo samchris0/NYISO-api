@@ -1,4 +1,5 @@
 .env
+.DS_Store
 log.log
 clean_up.py
 venv
