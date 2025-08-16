@@ -9,7 +9,6 @@ class LoadISOForecastQuery(Schema):
     
     end = FlexibleDateTimeField(required=True)
 
-    ptid = fields.List(fields.Int(), required=False)
 
     @validates_schema
     def start_after(self, data, **kwargs):
