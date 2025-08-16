@@ -34,7 +34,7 @@ To use this API locally you must have PostgreSQL installed on your device.
 
 <details>
 
-<summary>Day Ahead</summary>
+<summary>Day-Ahead</summary>
 <br />
 Endpoint:
 
@@ -42,10 +42,10 @@ Endpoint:
 
 Parameters:
 
-| Name  | Description | Example |
-| --- | --- | --- |
-| start  | Datetime, inclusive lower limit of query range, must be after 11/18/1999 and before current time | "2005-6-6 9:15:00" |
-| end  | Datetime, inclusive upper limit of query range, must be after 11/18/1999 and before current time | "2012-12-21 0:00" |
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
 
 Returns:
 
@@ -54,8 +54,8 @@ List of JSON Objects in the following format
 | Name  | Type | Description |
 | --- | --- | --- |
 | timestamp | Datetime | Timestamp of Data Point
-| name | String | Name of Bus |
-| ptid | Integer | ID of Bus |
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
 | spinning_reserve_10min | Float | Price of 10 Minute Spinning Reserve |
 | non_sync_reserve_10min | Float | Price of 10 Minute Non-Synchronous Reserve |
 | operating_reserve_30min | Float | Price of 30 Minute Operating Reserve |
@@ -78,10 +78,10 @@ Endpoint:
 
 Parameters:
 
-| Name  | Description | Example |
-| --- | --- | --- |
-| start  | Datetime, inclusive lower limit of query range, must be after 11/18/1999 and before current time | "2005-6-6 9:15:00" |
-| end  | Datetime, inclusive upper limit of query range, must be after 11/18/1999 and before current time | "2012-12-21 0:00" |
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
 
 Returns:
 
@@ -90,8 +90,8 @@ List of JSON Objects in the following format
 | Name  | Type | Description |
 | --- | --- | --- |
 | timestamp | Datetime | Timestamp of Data Point
-| name | String | Name of Bus |
-| ptid | Integer | ID of Bus |
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
 | spinning_reserve_10min | Float | Price of 10 Minute Spinning Reserve |
 | non_sync_reserve_10min | Float | Price of 10 Minute Non-Synchronous Reserve |
 | operating_reserve_30min | Float | Price of 30 Minute Operating Reserve |
@@ -104,11 +104,339 @@ Ancillary services data reporting changes several times in the historical record
 
 </details>
 
+## Locational Based Marginal Pricing
+
+### Day-Ahead
+
+<details>
+
+<summary>Generator Price</summary>
+<br />
+
+Endpoint:
+
+*'/lbmp/day-ahead/generator'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+    
+</details>
+
+<details>
+
+<summary>Zonal Price</summary>
+<br />
+
+Endpoint:
+
+*'/lbmp/day-ahead/zonal'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+
+</details>
+
+### Real-Time
+
+<details>
+
+<summary>Generator Price</summary>
+<br />
+
+Endpoint:
+
+*'/lbmp/real-tim/generator'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+    
+</details>
+
+<details>
+
+<summary>Zonal Price</summary>
+<br />
+
+Endpoint:
+
+*'/lbmp/real-time/zonal'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+
+</details>
+
+### Real-Time Weighted
+
+<details>
+
+<summary>Generator Price</summary>
+<br />
+
+Endpoint:
+
+*'/lbmp/real-time-wt/generator'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+    
+</details>
+
+<details>
+
+<summary>Zonal Price</summary>
+<br />
+
+Endpoint:
+
+*'/lbmp/real-time-wt/zonal'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+
+</details>
+
+## Load
+
+### Forecast
+
+<details>
+
+<summary>Zonal Bids</summary>
+<br />
+
+Endpoint:
+
+*/load/forecast/zonal-bid*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| energy_bid_load | Float | MWh of physical load served in the DAM being bid as price takers |
+| bilateral_load | Float | MWh of physical load served in the DAM via bilateral contracts |
+| price_cap_load | Float | MWh of physical load served in the DAM being bid to be scheduled at or below a specific price |
+| virtual_load | Float | MWh of non-physical load served in the DAM |
+| virtual_supply | Float | MWh of non-physical negative load served in the DAM |
+
+</details>
+
+<details>
+
+<summary>Load Forecast</summary>
+<br />
+
+Endpoint:
+
+*/load/forecast/forecast*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Zone |
+| load | Float | Forecasted MWh of physical load for the given zone |
+
+</details>
+
+### Actual Load
+
+<details>
+
+<summary>Real-Time</summary>
+<br />
+
+Endpoint:
+
+*/load/actual/real-time*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Zone |
+| ptid | Integer | ID of Node |
+| load | Float | MW of instantaneous physical load for the given zone |
+
+</details>
+
+<details>
+
+<summary>Real-Time Integrated</summary>
+<br />
+
+Endpoint:
+
+*/load/actual/integrated*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before current time | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Zone |
+| ptid | Integer | ID of Node |
+| integrated_load | Float | MW of physical load for the given zone integrated over the previous 5 minutes |
+
+</details>
+
 ## Historical Real-Time Commitment
 
 <details>
 
-<summary>Ancillary</summary>
+<summary>Ancillary Services</summary>
 <br />
 
 Endpoint:
@@ -117,10 +445,10 @@ Endpoint:
 
 Parameters:
 
-| Name  | Description | Example |
-| --- | --- | --- |
-| start | Datetime, inclusive lower limit of query range, must be after 11/18/1999 and before current time | "2005-6-6 9:15:00" |
-| end | Datetime, inclusive upper limit of query range, must be after 11/18/1999 and before current time | "2012-12-21 0:00" |
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before 4/8/2014 17:15 | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before 4/8/2014 17:15 | "2012-12-21 0:00" | Yes |
 
 Returns:
 
@@ -129,8 +457,8 @@ List of JSON Objects in the following format
 | Name  | Type | Description |
 | --- | --- | --- |
 | timestamp | Datetime | Timestamp of Data Point
-| name | String | Name of Bus |
-| ptid | Integer | ID of Bus |
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
 | spinning_reserve_10min | Float | Price of 10 Minute Spinning Reserve |
 | non_sync_reserve_10min | Float | Price of 10 Minute Non-Synchronous Reserve |
 | operating_reserve_30min | Float | Price of 30 Minute Operating Reserve |
@@ -144,4 +472,67 @@ Ancillary services data reporting changes several times in the historical record
 </details>
 
 
+<details>
+
+<summary>Generator Price</summary>
+<br />
+
+Endpoint:
+
+*'/historical-rtc/generator'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before 4/8/2014 17:15 | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before 4/8/2014 17:15 | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+    
+</details>
+
+<details>
+
+<summary>Zonal Price</summary>
+<br />
+
+Endpoint:
+
+*'/historical-rtc/zonal'*
+
+Parameters:
+
+| Name  | Type | Description | Example | Required |
+| --- | --- | --- | --- | --- |
+| start | String | Inclusive lower limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before 4/8/2014 17:15 | "2005-6-6 9:15:00" | Yes |
+| end | String | Inclusive upper limit of query range in an ISO 8601 format, must be after 11/18/1999 00:00 and before 4/8/2014 17:15 | "2012-12-21 0:00" | Yes |
+| ptid | Integer | Point indentification of node | 323608 | No |
+
+Returns:
+
+List of JSON Objects in the following format
+
+| Name  | Type | Description |
+| --- | --- | --- |
+| timestamp | Datetime | Timestamp of Data Point
+| name | String | Name of Node |
+| ptid | Integer | ID of Node |
+| lbmp | Float | Locational Based Marginal Price (LBMP) |
+| marginal_cost_losses | Float | Loss Component of LBMP |
+| marginal_cost_congestion | Float | Congestion Component of LBMP |
+
+</details>
 
