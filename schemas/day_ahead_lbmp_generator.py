@@ -18,7 +18,8 @@ class DayAheadLBMPGeneratorQuery(Schema):
 
     @validates_schema
     def end_before(self, data, **kwargs):
-        if data['end'] > datetime.datetime.now():
+        end_of_day = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+        if data['end'] > end_of_day:
              raise ValidationError('Data not available for this end point')
 
     @validates_schema
