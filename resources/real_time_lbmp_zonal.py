@@ -7,7 +7,7 @@ from flask_restful import Resource
 from marshmallow import ValidationError
 
 from extensions import db
-from schemas.real_time_lbmp_zonal import RealTimeLBMPZonalQuery, RealTimeLBMPZonalValidation
+from schemas.real_time_lbmp_zonal import RealTimeLBMPZonalIngestion, RealTimeLBMPZonalQuery, RealTimeLBMPZonalValidation
 from scrape.real_time_lbmp_zonal import scrape_real_time_lbmp_zonal 
 from models.real_time_lbmp_zonal import RealTimeLBMPZonalModel
 from utils.find_missing_dates import find_missing_dates
@@ -25,33 +25,57 @@ marginal_cost_congestion: Added cost due to transmission constraints
 logger = logging.getLogger(__name__)
 
 class RealTimeLBMPZonal(Resource):
+    def post(self):
+        # POST request body, not URL query parameters
+        payload = request.get_json() or {}
 
-    def get(Self):
+        try:
+            validated = RealTimeLBMPZonalIngestion().load(payload)
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+        missing_dates = find_missing_dates(
+            validated["start"],
+            validated["end"],
+            RealTimeLBMPZonalModel,
+        )
+
+        if missing_dates:
+            scrape_real_time_lbmp_zonal(missing_dates)
+
+        return {
+            "message": "Ingestion complete",
+            "start": validated["start"].isoformat(),
+            "end": validated["end"].isoformat(),
+        }, 201
+
+    def get(self):
+        # GET filters come from URL query parameters
+        
+                
         query_params = request.args.to_dict()
+
+        if request.args.getlist("ptid"):
+            query_params["ptid"] = request.args.getlist("ptid")
+
         try:
             validated = RealTimeLBMPZonalQuery().load(query_params)
         except ValidationError as err:
             return {"errors": err.messages}, 400
         
-        start = validated['start']
-        end = validated['end']
+        query = db.session.query(RealTimeLBMPZonalModel).filter(
+            RealTimeLBMPZonalModel.timestamp.between(
+                validated["start"],
+                validated["end"],
+            )
+        )
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, RealTimeLBMPZonalModel)
+        if ptids := validated.get("ptid"):
+            query = query.filter(RealTimeLBMPZonalModel.ptid.in_(ptids))
 
-        # Scrape missing data
-        if missingDates:
-            scrape_real_time_lbmp_zonal(missingDates)
+        results = query.order_by(
+            RealTimeLBMPZonalModel.timestamp,
+            RealTimeLBMPZonalModel.ptid,
+        ).all()
 
-        # Retrieve all data in between start and end from database
-        query = db.session.query(RealTimeLBMPZonalModel).filter(RealTimeLBMPZonalModel.timestamp.between(start, end))
-
-        if validated.get('ptid'):
-            query = query.filter(RealTimeLBMPZonalModel.ptid.in_(validated['ptid']))
-
-        results = query.all()
-    
-        # Serialize data
-        json_data = RealTimeLBMPZonalValidation(many=True).dump(results)
-
-        return jsonify(json_data)
+        return jsonify(RealTimeLBMPZonalValidation(many=True).dump(results))
