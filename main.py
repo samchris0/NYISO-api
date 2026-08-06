@@ -6,10 +6,10 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 
-from extensions import db
-from models import *
-from resources import __all__ as resource_definitions
-from utils.configure_logging import ConfigureLogging
+from nyiso_api.extensions import db
+from nyiso_api.models import *
+from nyiso_api.resources import __all__ as resource_definitions
+from nyiso_api.utils.configure_logging import ConfigureLogging
 
 def create_app():
     app = Flask(__name__)

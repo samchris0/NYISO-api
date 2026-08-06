@@ -5,8 +5,8 @@ from sqlalchemy import func, text, select, literal, union_all
 from sqlalchemy.orm import aliased
 from sqlalchemy.dialects import postgresql
 
-from extensions import db
-from utils.get_date_range import get_date_range
+from nyiso_api.extensions import db
+from nyiso_api.utils.get_date_range import get_date_range
 
 logger = logging.getLogger(__name__)
 

@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.load_iso_forecast import LoadISOForecastValidation
-from models.load_iso_forecast import LoadISOForecastModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.load_iso_forecast import LoadISOForecastValidation
+from nyiso_api.models.load_iso_forecast import LoadISOForecastModel
 
 logger = logging.getLogger(__name__)
 

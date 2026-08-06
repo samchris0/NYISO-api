@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalValidation
-from models.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalValidation
+from nyiso_api.models.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalModel
 
 logger = logging.getLogger(__name__)
 

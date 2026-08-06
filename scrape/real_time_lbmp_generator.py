@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.real_time_lbmp_generator import RealTimeLBMPGeneratorValidation
-from models.real_time_lbmp_generator import RealTimeLBMPGeneratorModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.real_time_lbmp_generator import RealTimeLBMPGeneratorValidation
+from nyiso_api.models.real_time_lbmp_generator import RealTimeLBMPGeneratorModel
 
 logger = logging.getLogger(__name__)
 

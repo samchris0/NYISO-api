@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.historical_rtc_zonal import HistoricalRTCZonalValidation
-from models.historical_rtc_zonal import HistoricalRTCZonalModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.historical_rtc_zonal import HistoricalRTCZonalValidation
+from nyiso_api.models.historical_rtc_zonal import HistoricalRTCZonalModel
 
 logger = logging.getLogger(__name__)
 

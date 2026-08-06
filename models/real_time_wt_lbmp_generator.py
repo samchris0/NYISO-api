@@ -1,4 +1,4 @@
-from extensions import db
+from nyiso_api.extensions import db
 
 class RealTimeWT_LBMPGeneratorModel(db.Model):
     timestamp = db.Column(db.DateTime, primary_key=True)

@@ -5,11 +5,11 @@ from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.real_time_wt_lbmp_generator import RealTimeWT_LBMPGeneratorQuery, RealTimeWT_LBMPGeneratorValidation
-from scrape.real_time_wt_lbmp_generator import scrape_real_time_wt_lbmp_generator 
-from models.real_time_wt_lbmp_generator import RealTimeWT_LBMPGeneratorModel
-from utils.find_missing_dates import find_missing_dates
+from nyiso_api.extensions import db
+from nyiso_api.schemas.real_time_wt_lbmp_generator import RealTimeWT_LBMPGeneratorQuery, RealTimeWT_LBMPGeneratorValidation
+from nyiso_api.scrape.real_time_wt_lbmp_generator import scrape_real_time_wt_lbmp_generator 
+from nyiso_api.models.real_time_wt_lbmp_generator import RealTimeWT_LBMPGeneratorModel
+from nyiso_api.utils.find_missing_dates import find_missing_dates
 
 """
 Variables returned:

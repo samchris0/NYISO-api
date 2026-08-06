@@ -2,7 +2,7 @@ import datetime
 
 from marshmallow import Schema, fields, validates_schema, ValidationError, RAISE
 
-from utils.fields import FlexibleDateTimeField
+from nyiso_api.utils.fields import FlexibleDateTimeField
 
 
 class DayAheadAncillaryQuery(Schema):
