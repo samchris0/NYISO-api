@@ -25,30 +25,6 @@ marginal_cost_congestion: Added cost due to transmission constraints
 logger = logging.getLogger(__name__)
 
 class RealTimeLBMPZonal(Resource):
-    def post(self):
-        # POST request body, not URL query parameters
-        payload = request.get_json() or {}
-
-        try:
-            validated = RealTimeLBMPZonalIngestion().load(payload)
-        except ValidationError as err:
-            return {"errors": err.messages}, 400
-
-        missing_dates = find_missing_dates(
-            validated["start"],
-            validated["end"],
-            RealTimeLBMPZonalModel,
-        )
-
-        if missing_dates:
-            scrape_real_time_lbmp_zonal(missing_dates)
-
-        return {
-            "message": "Ingestion complete",
-            "start": validated["start"].isoformat(),
-            "end": validated["end"].isoformat(),
-        }, 201
-
     def get(self):
         # GET filters come from URL query parameters
         query_params = request.args.to_dict()
@@ -61,6 +37,13 @@ class RealTimeLBMPZonal(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+        # Check if the date range is in the database
+        missingDates = find_missing_dates(start, end, RealTimeLBMPZonalModel)
+
+        # Scrape missing data
+        if missingDates:
+            scrape_real_time_lbmp_zonal(missingDates)
+
         query = db.session.query(RealTimeLBMPZonalModel).filter(
             RealTimeLBMPZonalModel.timestamp.between(
                 validated["start"],
@@ -70,7 +53,7 @@ class RealTimeLBMPZonal(Resource):
 
         if ptids := validated.get("ptid"):
             query = query.filter(RealTimeLBMPZonalModel.ptid.in_(ptids))
-
+        
         results = query.order_by(
             RealTimeLBMPZonalModel.timestamp,
             RealTimeLBMPZonalModel.ptid,
