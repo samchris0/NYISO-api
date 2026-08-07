@@ -27,6 +27,7 @@ class DayAheadLBMPGenerator(Resource):
 
     def get(Self):
         query_params = request.args.to_dict()
+        query_params["ptid"] = request.args.getlist("ptid")
         try:
             validated = DayAheadLBMPGeneratorQuery().load(query_params)
         except ValidationError as err:

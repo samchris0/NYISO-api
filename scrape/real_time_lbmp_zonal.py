@@ -31,7 +31,7 @@ def scrape_real_time_lbmp_zonal(daterange):
     # Get list of filenames that contain datetimes in query
     valid_filenames = []
     for date in year_months_days:
-        valid_filenames.append(str(date[0]) + str(date[1]) + str(date[2]) + "realtime_zonal.csv")
+        valid_filenames.append(str(date[0]) + str(date[1]) + str(date[2]) + "realtime_zone.csv")
 
     # Get unique year, month combos of query
     year_months = set()
@@ -41,7 +41,7 @@ def scrape_real_time_lbmp_zonal(daterange):
     # Make a list of URLs that will need to be accessed from year and month combos
     urls = []
     for date in year_months:
-        urls.append('https://mis.nyiso.com/public/csv/realtime/' + str(date[0]) + str(date[1]) + '01realtime_zonal_csv.zip')
+        urls.append('https://mis.nyiso.com/public/csv/realtime/' + str(date[0]) + str(date[1]) + '01realtime_zone_csv.zip')
 
     data = pd.DataFrame()
 

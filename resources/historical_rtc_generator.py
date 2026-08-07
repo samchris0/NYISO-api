@@ -18,6 +18,7 @@ class HistoricalRTCGenerator(Resource):
     
     def get(Self):
         query_params = request.args.to_dict()
+        query_params["ptid"] = request.args.getlist("ptid")
         try:
             validated = HistoricalRTCGeneratorQuery().load(query_params)
         except ValidationError as err:
@@ -45,4 +46,3 @@ class HistoricalRTCGenerator(Resource):
         json_data = HistoricalRTCGeneratorValidation(many=True).dump(results)
 
         return jsonify(json_data)
-        

@@ -15,6 +15,7 @@ class LoadRealTimeIntegrated(Resource):
 
     def get(Self):
         query_params = request.args.to_dict()
+        query_params["ptid"] = request.args.getlist("ptid")
         try:
             validated = LoadRealTimeIntegratedQuery().load(query_params)
         except ValidationError as err:

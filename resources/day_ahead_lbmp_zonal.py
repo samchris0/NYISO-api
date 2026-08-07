@@ -27,6 +27,7 @@ class DayAheadLBMPZonal(Resource):
 
     def get(Self):
         query_params = request.args.to_dict()
+        query_params["ptid"] = request.args.getlist("ptid")
         try:
             validated = DayAheadLBMPZonalQuery().load(query_params)
         except ValidationError as err:
