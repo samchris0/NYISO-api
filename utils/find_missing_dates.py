@@ -13,16 +13,26 @@ logger = logging.getLogger(__name__)
 def find_missing_dates(start, end, table):
     expected_dates = get_date_range(start, end)
 
+    range_start = datetime.datetime.combine(
+        start.date(),
+        datetime.time.min,
+    )
+    range_end = datetime.datetime.combine(
+        end.date() + datetime.timedelta(days=1),
+        datetime.time.min,
+    )
+
     # Find all existing datapoints in the given table
     existing = (
-                db.session.query(table.timestamp)
-                .filter(table.timestamp.between(start, end))
-                .all()
-            )
+        db.session.query(table.timestamp)
+        .filter(table.timestamp >= range_start)
+        .filter(table.timestamp < range_end)
+        .all()
+    )
 
     # Create a set of existing dates
     existing_dates = {
-        ts[0].date() for ts in existing 
+        row[0].date() for row in existing 
     }
 
     logger.info(existing_dates)

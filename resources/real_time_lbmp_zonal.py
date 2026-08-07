@@ -37,6 +37,9 @@ class RealTimeLBMPZonal(Resource):
         except ValidationError as err:
             return {"errors": err.messages}, 400
 
+        start = validated['start']
+        end = validated['end']
+
         # Check if the date range is in the database
         missingDates = find_missing_dates(start, end, RealTimeLBMPZonalModel)
 
