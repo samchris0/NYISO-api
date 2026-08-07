@@ -5,11 +5,11 @@ from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.load_iso_forecast import LoadISOForecastQuery, LoadISOForecastValidation
-from scrape.load_iso_forecast import scrape_load_iso_forecast
-from models.load_iso_forecast import LoadISOForecastModel
-from utils.find_missing_dates import find_missing_dates
+from nyiso_api.extensions import db
+from nyiso_api.schemas.load_iso_forecast import LoadISOForecastQuery, LoadISOForecastValidation
+from nyiso_api.scrape.load_iso_forecast import scrape_load_iso_forecast
+from nyiso_api.models.load_iso_forecast import LoadISOForecastModel
+from nyiso_api.utils.find_missing_dates import find_missing_dates
 
 class LoadISOForecast(Resource):
 

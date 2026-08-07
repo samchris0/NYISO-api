@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.load_bid_zonal import LoadBidZonalValidation
-from models.load_bid_zonal import LoadBidZonalModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.load_bid_zonal import LoadBidZonalValidation
+from nyiso_api.models.load_bid_zonal import LoadBidZonalModel
 
 logger = logging.getLogger(__name__)
 

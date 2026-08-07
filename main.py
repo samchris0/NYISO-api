@@ -1,4 +1,6 @@
 import os
+import sys
+import types
 from dotenv import load_dotenv
 import logging
 
@@ -6,10 +8,15 @@ from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 
-from extensions import db
-from models import *
-from resources import __all__ as resource_definitions
-from utils.configure_logging import ConfigureLogging
+if __package__ in (None, ""):
+    package = types.ModuleType("nyiso_api")
+    package.__path__ = [os.path.dirname(os.path.abspath(__file__))]
+    sys.modules.setdefault("nyiso_api", package)
+
+from nyiso_api.extensions import db
+from nyiso_api.models import *
+from nyiso_api.resources import __all__ as resource_definitions
+from nyiso_api.utils.configure_logging import ConfigureLogging
 
 def create_app():
     app = Flask(__name__)
@@ -34,4 +41,4 @@ def create_app():
 
 if __name__ == "__main__":
     app = create_app()
-    app.run(debug=False)
+    app.run(host="0.0.0.0", port=5000,debug=False)

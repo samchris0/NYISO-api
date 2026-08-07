@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.load_real_time_actual import LoadRealTimeActualValidation
-from models.load_real_time_actual import LoadRealTimeActualModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.load_real_time_actual import LoadRealTimeActualValidation
+from nyiso_api.models.load_real_time_actual import LoadRealTimeActualModel
 
 logger = logging.getLogger(__name__)
 

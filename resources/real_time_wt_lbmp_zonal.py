@@ -5,11 +5,11 @@ from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalQuery, RealTimeWT_LBMPZonalValidation
-from scrape.real_time_wt_lbmp_zonal import scrape_real_time_wt_lbmp_zonal 
-from models.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalModel
-from utils.find_missing_dates import find_missing_dates
+from nyiso_api.extensions import db
+from nyiso_api.schemas.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalQuery, RealTimeWT_LBMPZonalValidation
+from nyiso_api.scrape.real_time_wt_lbmp_zonal import scrape_real_time_wt_lbmp_zonal
+from nyiso_api.models.real_time_wt_lbmp_zonal import RealTimeWT_LBMPZonalModel
+from nyiso_api.utils.find_missing_dates import find_missing_dates
 
 class RealTimeWeightedLBMPZonal(Resource):
 
@@ -20,7 +20,7 @@ class RealTimeWeightedLBMPZonal(Resource):
             validated = RealTimeWT_LBMPZonalQuery().load(query_params)
         except ValidationError as err:
             return {"errors": err.messages}, 400
-        
+
         start = validated['start']
         end = validated['end']
 
@@ -38,7 +38,7 @@ class RealTimeWeightedLBMPZonal(Resource):
             query = query.filter(RealTimeWT_LBMPZonalModel.ptid.in_(validated['ptid']))
 
         results = query.all()
-    
+
         # Serialize data
         json_data = RealTimeWT_LBMPZonalValidation(many=True).dump(results)
 

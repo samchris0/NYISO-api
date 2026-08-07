@@ -3,4 +3,5 @@
 log.log
 clean_up.py
 venv
-__pycache__
+__pycache__/
+*.py[cod]

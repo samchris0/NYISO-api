@@ -6,11 +6,11 @@ from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.historical_rtc_generator import HistoricalRTCGeneratorQuery, HistoricalRTCGeneratorValidation
-from scrape.historical_rtc_generator import scrape_historical_rtc_generator
-from models.historical_rtc_generator import HistoricalRTCGeneratorModel
-from utils.find_missing_dates import find_missing_dates
+from nyiso_api.extensions import db
+from nyiso_api.schemas.historical_rtc_generator import HistoricalRTCGeneratorQuery, HistoricalRTCGeneratorValidation
+from nyiso_api.scrape.historical_rtc_generator import scrape_historical_rtc_generator
+from nyiso_api.models.historical_rtc_generator import HistoricalRTCGeneratorModel
+from nyiso_api.utils.find_missing_dates import find_missing_dates
 
 logger = logging.getLogger(__name__)
 

@@ -5,15 +5,15 @@ from flask import request, jsonify
 from flask_restful import Resource
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.real_time_lbmp_generator import RealTimeLBMPGeneratorQuery, RealTimeLBMPGeneratorValidation
-from scrape.real_time_lbmp_generator import scrape_real_time_lbmp_generator 
-from models.real_time_lbmp_generator import RealTimeLBMPGeneratorModel
-from utils.find_missing_dates import find_missing_dates
+from nyiso_api.extensions import db
+from nyiso_api.schemas.real_time_lbmp_generator import RealTimeLBMPGeneratorQuery, RealTimeLBMPGeneratorValidation
+from nyiso_api.scrape.real_time_lbmp_generator import scrape_real_time_lbmp_generator
+from nyiso_api.models.real_time_lbmp_generator import RealTimeLBMPGeneratorModel
+from nyiso_api.utils.find_missing_dates import find_missing_dates
 
 """
 Variables returned:
-timestamp 
+timestamp
 ptid
 name
 lbmp: The locational based marginal price for a given time and location
@@ -32,7 +32,7 @@ class RealTimeLBMPGenerator(Resource):
             validated = RealTimeLBMPGeneratorQuery().load(query_params)
         except ValidationError as err:
             return {"errors": err.messages}, 400
-        
+
         start = validated['start']
         end = validated['end']
 
@@ -50,7 +50,7 @@ class RealTimeLBMPGenerator(Resource):
             query = query.filter(RealTimeLBMPGeneratorModel.ptid.in_(validated['ptid']))
 
         results = query.all()
-    
+
         # Serialize data
         json_data = RealTimeLBMPGeneratorValidation(many=True).dump(results)
 

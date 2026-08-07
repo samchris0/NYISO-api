@@ -8,9 +8,9 @@ import zipfile
 import pandas as pd
 from marshmallow import ValidationError
 
-from extensions import db
-from schemas.historical_rtc_generator import HistoricalRTCGeneratorValidation
-from models.historical_rtc_generator import HistoricalRTCGeneratorModel
+from nyiso_api.extensions import db
+from nyiso_api.schemas.historical_rtc_generator import HistoricalRTCGeneratorValidation
+from nyiso_api.models.historical_rtc_generator import HistoricalRTCGeneratorModel
 
 logger = logging.getLogger(__name__)
 
