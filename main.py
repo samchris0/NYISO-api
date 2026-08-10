@@ -27,7 +27,8 @@ def create_app():
 
     # Load .env file and set config
     load_dotenv()
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URL")
+    DATABASE_URL = f"postgresql+psycopg2://{os.getenv('PG_USER')}:${os.getenv('PG_PASSWORD')}@db:5432/${os.getenv('PG_DATABASE')}"
+    app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
