@@ -56,11 +56,11 @@ def scrape_real_time_lbmp_zonal(daterange):
                 if filename in valid_filenames:
                     
                     # Extract file and load data
-                    z.extract(filename, path='mydataset')
-                    # ADD: parse 'Time Stamp' as datetime
-                    df = pd.read_csv(os.path.join('mydataset', filename),
-                                    parse_dates=['Time Stamp']
-                                    )
+                    with z.open(filename) as csv_file:
+                        df = pd.read_csv(
+                            csv_file,
+                            parse_dates=["Time Stamp"],
+                        )
                     
                     # Merge new data
                     data = pd.concat([data,df], axis=0)

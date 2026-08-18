@@ -42,7 +42,8 @@ class RealTimeLBMPZonal(Resource):
         )
 
         scrape_real_time_lbmp_zonal(dates)      
-    
+
+        return {"message": "Real-time zonal LBMP data ingested"}, 200
 
     def get(self):
         # GET filters come from URL query parameters

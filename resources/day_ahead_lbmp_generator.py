@@ -9,7 +9,7 @@ from nyiso_api.extensions import db
 from nyiso_api.schemas.day_ahead_lbmp_generator import DayAheadLBMPGeneratorQuery, DayAheadLBMPGeneratorValidation
 from nyiso_api.scrape.day_ahead_lbmp_generator import scrape_day_ahead_lbmp_generator
 from nyiso_api.models.day_ahead_lbmp_generator import DayAheadLBMPGeneratorModel
-from nyiso_api.utils.find_missing_dates import find_missing_dates
+from nyiso_api.utils.get_date_range import get_date_range
 
 """
 Variables returned:
@@ -25,7 +25,22 @@ logger = logging.getLogger(__name__)
 
 class DayAheadLBMPGenerator(Resource):
 
-    def get(Self):
+    def post(self):
+        payload = request.get_json() or {}
+
+        try:
+            validated = DayAheadLBMPGeneratorQuery(
+                only=("start", "end")
+            ).load(payload)
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+        scrape_day_ahead_lbmp_generator(
+            get_date_range(validated["start"], validated["end"])
+        )
+        return {"message": "Day-ahead generator LBMP data ingested"}, 200
+
+    def get(self):
         query_params = request.args.to_dict()
         query_params["ptid"] = request.args.getlist("ptid")
         try:
@@ -36,20 +51,16 @@ class DayAheadLBMPGenerator(Resource):
         start = validated['start']
         end = validated['end']
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, DayAheadLBMPGeneratorModel)
-
-        # Scrape missing data
-        if missingDates:
-            scrape_day_ahead_lbmp_generator(missingDates)
-
         # Retrieve all data in between start and end from database
         query = db.session.query(DayAheadLBMPGeneratorModel).filter(DayAheadLBMPGeneratorModel.timestamp.between(start, end))
 
         if validated.get('ptid'):
             query = query.filter(DayAheadLBMPGeneratorModel.ptid.in_(validated['ptid']))
 
-        results = query.all()
+        results = query.order_by(
+            DayAheadLBMPGeneratorModel.timestamp,
+            DayAheadLBMPGeneratorModel.ptid,
+        ).all()
 
         # Serialize data
         json_data = DayAheadLBMPGeneratorValidation(many=True).dump(results)

@@ -11,6 +11,8 @@ class LoadRealTimeActualQuery(Schema):
 
     ptid = fields.List(fields.Int(), required=False)
 
+    name = fields.List(fields.String(), required=False)
+
     @validates_schema
     def start_after(self, data, **kwargs):
         if data['start'] < datetime.datetime(2001, 5, 26, 0, 0):
@@ -37,4 +39,3 @@ class LoadRealTimeActualValidation(Schema):
     name = fields.String(required=True)
     ptid =fields.Integer()
     load = fields.Float()
-

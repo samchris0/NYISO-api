@@ -9,6 +9,8 @@ class LoadISOForecastQuery(Schema):
     
     end = FlexibleDateTimeField(required=True)
 
+    name = fields.List(fields.String(), required=False)
+
 
     @validates_schema
     def start_after(self, data, **kwargs):
@@ -35,4 +37,3 @@ class LoadISOForecastValidation(Schema):
     timestamp = fields.DateTime(required=True)
     name = fields.String(required=True)
     load = fields.Float()
-

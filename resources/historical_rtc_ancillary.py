@@ -9,7 +9,7 @@ from nyiso_api.extensions import db
 from nyiso_api.schemas.historical_rtc_ancillary import HistoricalRTCAncillaryQuery, HistoricalRTCAncillaryValidation
 from nyiso_api.scrape.historical_rtc_ancillary import scrape_historical_rtc_ancillary
 from nyiso_api.models.historical_rtc_ancillary import HistoricalRTCAncillaryModel
-from nyiso_api.utils.find_missing_dates import find_missing_dates
+from nyiso_api.utils.get_date_range import get_date_range
 
 
 """
@@ -27,7 +27,22 @@ logger = logging.getLogger(__name__)
 
 class HistoricalRTCAncillary(Resource):
 
-    def get(Self):
+    def post(self):
+        payload = request.get_json() or {}
+
+        try:
+            validated = HistoricalRTCAncillaryQuery(
+                only=("start", "end")
+            ).load(payload)
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+        scrape_historical_rtc_ancillary(
+            get_date_range(validated["start"], validated["end"])
+        )
+        return {"message": "Historical RTC ancillary data ingested"}, 200
+
+    def get(self):
         query_params = request.args.to_dict()
 
         try:
@@ -38,17 +53,14 @@ class HistoricalRTCAncillary(Resource):
         start = validated['start']
         end = validated['end']
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, HistoricalRTCAncillaryModel)
-
-        # Scrape missing data
-        if missingDates:
-            scrape_historical_rtc_ancillary(missingDates)
-
         # Retrieve all data in between start and end from database
         results = (
                     db.session.query(HistoricalRTCAncillaryModel)
                     .filter(HistoricalRTCAncillaryModel.timestamp.between(start, end))
+                    .order_by(
+                        HistoricalRTCAncillaryModel.timestamp,
+                        HistoricalRTCAncillaryModel.name,
+                    )
                     .all()
                 )
         

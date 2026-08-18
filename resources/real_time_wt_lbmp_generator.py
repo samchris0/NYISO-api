@@ -9,7 +9,7 @@ from nyiso_api.extensions import db
 from nyiso_api.schemas.real_time_wt_lbmp_generator import RealTimeWT_LBMPGeneratorQuery, RealTimeWT_LBMPGeneratorValidation
 from nyiso_api.scrape.real_time_wt_lbmp_generator import scrape_real_time_wt_lbmp_generator
 from nyiso_api.models.real_time_wt_lbmp_generator import RealTimeWT_LBMPGeneratorModel
-from nyiso_api.utils.find_missing_dates import find_missing_dates
+from nyiso_api.utils.get_date_range import get_date_range
 
 """
 Variables returned:
@@ -23,7 +23,22 @@ marginal_cost_congestion: Added cost due to transmission constraints
 
 class RealTimeWeightedLBMPGenerator(Resource):
 
-    def get(Self):
+    def post(self):
+        payload = request.get_json() or {}
+
+        try:
+            validated = RealTimeWT_LBMPGeneratorQuery(
+                only=("start", "end")
+            ).load(payload)
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+        scrape_real_time_wt_lbmp_generator(
+            get_date_range(validated["start"], validated["end"])
+        )
+        return {"message": "Weighted real-time generator LBMP data ingested"}, 200
+
+    def get(self):
         query_params = request.args.to_dict()
         query_params["ptid"] = request.args.getlist("ptid")
         try:
@@ -34,20 +49,16 @@ class RealTimeWeightedLBMPGenerator(Resource):
         start = validated['start']
         end = validated['end']
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, RealTimeWT_LBMPGeneratorModel)
-
-        # Scrape missing data
-        if missingDates:
-            scrape_real_time_wt_lbmp_generator(missingDates)
-
         # Retrieve all data in between start and end from database
         query = db.session.query(RealTimeWT_LBMPGeneratorModel).filter(RealTimeWT_LBMPGeneratorModel.timestamp.between(start, end))
 
         if validated.get('ptid'):
             query = query.filter(RealTimeWT_LBMPGeneratorModel.ptid.in_(validated['ptid']))
 
-        results = query.all()
+        results = query.order_by(
+            RealTimeWT_LBMPGeneratorModel.timestamp,
+            RealTimeWT_LBMPGeneratorModel.ptid,
+        ).all()
 
         # Serialize data
         json_data = RealTimeWT_LBMPGeneratorValidation(many=True).dump(results)

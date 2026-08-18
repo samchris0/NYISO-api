@@ -9,12 +9,29 @@ from nyiso_api.extensions import db
 from nyiso_api.schemas.load_iso_forecast import LoadISOForecastQuery, LoadISOForecastValidation
 from nyiso_api.scrape.load_iso_forecast import scrape_load_iso_forecast
 from nyiso_api.models.load_iso_forecast import LoadISOForecastModel
-from nyiso_api.utils.find_missing_dates import find_missing_dates
+from nyiso_api.utils.get_date_range import get_date_range
 
 class LoadISOForecast(Resource):
 
-    def get(Self):
+    def post(self):
+        payload = request.get_json() or {}
+
+        try:
+            validated = LoadISOForecastQuery(
+                only=("start", "end")
+            ).load(payload)
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+        scrape_load_iso_forecast(
+            get_date_range(validated["start"], validated["end"])
+        )
+        return {"message": "ISO load forecast data ingested"}, 200
+
+    def get(self):
         query_params = request.args.to_dict()
+        if request.args.getlist("name"):
+            query_params["name"] = request.args.getlist("name")
         try:
             validated = LoadISOForecastQuery().load(query_params)
         except ValidationError as err:
@@ -23,20 +40,16 @@ class LoadISOForecast(Resource):
         start = validated['start']
         end = validated['end']
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, LoadISOForecastModel)
-
-        # Scrape missing data
-        if missingDates:
-            scrape_load_iso_forecast(missingDates)
-
         # Retrieve all data in between start and end from database
         query = db.session.query(LoadISOForecastModel).filter(LoadISOForecastModel.timestamp.between(start, end))
 
         if validated.get('name'):
             query = query.filter(LoadISOForecastModel.name.in_(validated['name']))
 
-        results = query.all()
+        results = query.order_by(
+            LoadISOForecastModel.timestamp,
+            LoadISOForecastModel.name,
+        ).all()
     
         # Serialize data
         json_data = LoadISOForecastValidation(many=True).dump(results)

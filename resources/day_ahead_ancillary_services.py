@@ -9,7 +9,7 @@ from nyiso_api.extensions import db
 from nyiso_api.schemas.day_ahead_ancillary_services import DayAheadAncillaryQuery, DayAheadAncillaryValidation
 from nyiso_api.scrape.day_ahead_ancillary_services import scrape_day_ahead_ancillary
 from nyiso_api.models.day_ahead_ancillary_services import DayAheadAncillaryModel
-from nyiso_api.utils.find_missing_dates import find_missing_dates
+from nyiso_api.utils.get_date_range import get_date_range
 
 
 """
@@ -27,7 +27,22 @@ logger = logging.getLogger(__name__)
 
 class DayAheadAncillary(Resource):
 
-    def get(Self):
+    def post(self):
+        payload = request.get_json() or {}
+
+        try:
+            validated = DayAheadAncillaryQuery(
+                only=("start", "end")
+            ).load(payload)
+        except ValidationError as err:
+            return {"errors": err.messages}, 400
+
+        scrape_day_ahead_ancillary(
+            get_date_range(validated["start"], validated["end"])
+        )
+        return {"message": "Day-ahead ancillary data ingested"}, 200
+
+    def get(self):
         query_params = request.args.to_dict()
 
         try:
@@ -38,17 +53,14 @@ class DayAheadAncillary(Resource):
         start = validated['start']
         end = validated['end']
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, DayAheadAncillaryModel)
-
-        # Scrape missing data
-        if missingDates:
-            scrape_day_ahead_ancillary(missingDates)
-
         # Retrieve all data in between start and end from database
         results = (
                     db.session.query(DayAheadAncillaryModel)
                     .filter(DayAheadAncillaryModel.timestamp.between(start, end))
+                    .order_by(
+                        DayAheadAncillaryModel.timestamp,
+                        DayAheadAncillaryModel.name,
+                    )
                     .all()
                 )
         
