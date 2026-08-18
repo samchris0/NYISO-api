@@ -60,8 +60,6 @@ def scrape_load_iso_forecast(daterange):
                     # Merge new data
                     data = pd.concat([data,df], axis=0)
 
-                    # Delete CSV file after processing
-                    os.remove(os.path.join('mydataset', filename))
 
     #Convert records into the correct format
     expected_cols = {
