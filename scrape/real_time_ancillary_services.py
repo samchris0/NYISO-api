@@ -7,6 +7,7 @@ import zipfile
 
 import pandas as pd
 from marshmallow import ValidationError
+from sqlalchemy.dialects.postgresql import insert
 
 from nyiso_api.extensions import db
 from nyiso_api.utils.standardize_real_time_ancillary_df import standardize_dataframe
@@ -83,13 +84,41 @@ def scrape_real_time_ancillary(daterange):
 
     try:
         validated_records = RealTimeAncillaryValidation().load(records, many=True)
-    except ValidationError as err:
-        print(err.messages)
+    except ValidationError:
+        logger.exception("Real-time ancillary validation failed")
+        raise
+
+    if not validated_records:
+        logger.info("No real-time ancillary records found for %s", sorted(daterange))
+        return
+
+    validated_records = list({
+        (record["timestamp"], record["name"]): record
+        for record in validated_records
+    }.values())
     
-    events = [RealTimeAncillaryModel(**record) for record in validated_records]
-    
-    db.session.add_all(events)
-    db.session.commit()
+    table = RealTimeAncillaryModel.__table__
+    chunk_size = 5_000
+    try:
+        for offset in range(0, len(validated_records), chunk_size):
+            chunk = validated_records[offset:offset + chunk_size]
+            statement = insert(table).values(chunk)
+            statement = statement.on_conflict_do_update(
+                index_elements=[table.c.timestamp, table.c.name],
+                set_={
+                    "ptid": statement.excluded.ptid,
+                    "spinning_reserve_10min": statement.excluded.spinning_reserve_10min,
+                    "non_sync_reserve_10min": statement.excluded.non_sync_reserve_10min,
+                    "operating_reserve_30min": statement.excluded.operating_reserve_30min,
+                    "regulation_capacity": statement.excluded.regulation_capacity,
+                    "regulation_movement": statement.excluded.regulation_movement,
+                },
+            )
+            db.session.execute(statement)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     
 

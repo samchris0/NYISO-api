@@ -7,6 +7,7 @@ import zipfile
 
 import pandas as pd
 from marshmallow import ValidationError
+from sqlalchemy.dialects.postgresql import insert
 
 from nyiso_api.extensions import db
 from nyiso_api.schemas.load_iso_forecast import LoadISOForecastValidation
@@ -76,13 +77,34 @@ def scrape_load_iso_forecast(daterange):
 
     try:
         validated_records = LoadISOForecastValidation().load(records, many=True)
-    except ValidationError as err:
-        print(err.messages)
+    except ValidationError:
+        logger.exception("ISO load forecast validation failed")
+        raise
+
+    if not validated_records:
+        logger.info("No ISO load forecast records found for %s", sorted(daterange))
+        return
+
+    validated_records = list({
+        (record["timestamp"], record["name"]): record
+        for record in validated_records
+    }.values())
     
-    events = [LoadISOForecastModel(**record) for record in validated_records]
-    
-    db.session.add_all(events)
-    db.session.commit()
+    table = LoadISOForecastModel.__table__
+    chunk_size = 5_000
+    try:
+        for offset in range(0, len(validated_records), chunk_size):
+            chunk = validated_records[offset:offset + chunk_size]
+            statement = insert(table).values(chunk)
+            statement = statement.on_conflict_do_update(
+                index_elements=[table.c.timestamp, table.c.name],
+                set_={"load": statement.excluded.load},
+            )
+            db.session.execute(statement)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     
 

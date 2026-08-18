@@ -7,6 +7,7 @@ import zipfile
 
 import pandas as pd
 from marshmallow import ValidationError
+from sqlalchemy.dialects.postgresql import insert
 
 from nyiso_api.extensions import db
 from nyiso_api.schemas.real_time_lbmp_generator import RealTimeLBMPGeneratorValidation
@@ -82,13 +83,39 @@ def scrape_real_time_lbmp_generator(daterange):
 
     try:
         validated_records = RealTimeLBMPGeneratorValidation().load(records, many=True)
-    except ValidationError as err:
-        print(err.messages)
+    except ValidationError:
+        logger.exception("Real-time generator LBMP validation failed")
+        raise
+
+    if not validated_records:
+        logger.info("No real-time generator LBMP records found for %s", sorted(daterange))
+        return
+
+    validated_records = list({
+        (record["timestamp"], record["ptid"]): record
+        for record in validated_records
+    }.values())
     
-    events = [RealTimeLBMPGeneratorModel(**record) for record in validated_records]
-    
-    db.session.add_all(events)
-    db.session.commit()
+    table = RealTimeLBMPGeneratorModel.__table__
+    chunk_size = 5_000
+    try:
+        for offset in range(0, len(validated_records), chunk_size):
+            chunk = validated_records[offset:offset + chunk_size]
+            statement = insert(table).values(chunk)
+            statement = statement.on_conflict_do_update(
+                index_elements=[table.c.timestamp, table.c.ptid],
+                set_={
+                    "name": statement.excluded.name,
+                    "lbmp": statement.excluded.lbmp,
+                    "marginal_cost_losses": statement.excluded.marginal_cost_losses,
+                    "marginal_cost_congestion": statement.excluded.marginal_cost_congestion,
+                },
+            )
+            db.session.execute(statement)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     
 

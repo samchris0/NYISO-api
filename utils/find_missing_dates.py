@@ -35,6 +35,11 @@ def find_missing_dates(start, end, table):
         row[0].date() for row in existing 
     }
 
+    today = datetime.datetime.now().date()
+
+    # removes todays date to keep getting real time data
+    existing_dates.discard(today)
+
     logger.info(existing_dates)
     
     return expected_dates - existing_dates

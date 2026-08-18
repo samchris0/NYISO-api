@@ -7,6 +7,7 @@ import zipfile
 
 import pandas as pd
 from marshmallow import ValidationError
+from sqlalchemy.dialects.postgresql import insert
 
 from nyiso_api.extensions import db
 from nyiso_api.schemas.real_time_lbmp_zonal import RealTimeLBMPZonalValidation
@@ -82,15 +83,70 @@ def scrape_real_time_lbmp_zonal(daterange):
 
     try:
         validated_records = RealTimeLBMPZonalValidation().load(records, many=True)
-    except ValidationError as err:
-        print(err.messages)
-    
-    events = [RealTimeLBMPZonalModel(**record) for record in validated_records]
-    
-    db.session.add_all(events)
-    db.session.commit()
+    except ValidationError:
+        logger.exception(
+            "Real-time zonal LBMP validation failed"
+        )
+        raise
 
-    
+    if not validated_records:
+        logger.info(
+            "No real-time zonal LBMP records found for %s",
+            sorted(daterange),
+        )
+        return
+
+    deduplicated = {
+        (record["timestamp"], record["ptid"]): record
+        for record in validated_records
+    }
+    validated_records = list(deduplicated.values())
+
+    table = RealTimeLBMPZonalModel.__table__
+
+    chunk_size = 5_000
+    processed = 0
+
+    try:
+        for offset in range(
+            0,
+            len(validated_records),
+            chunk_size,
+        ):
+            chunk = validated_records[
+                offset:offset + chunk_size
+            ]
+
+            statement = insert(table).values(chunk)
+
+            statement = statement.on_conflict_do_update(
+                index_elements=[
+                    table.c.timestamp,
+                    table.c.ptid,
+                ],
+                set_={
+                    "name": statement.excluded.name,
+                    "lbmp": statement.excluded.lbmp,
+                    "marginal_cost_losses":
+                        statement.excluded
+                        .marginal_cost_losses,
+                    "marginal_cost_congestion":
+                        statement.excluded
+                        .marginal_cost_congestion,
+                },
+            )
+
+            result = db.session.execute(statement)
+            processed += result.rowcount
+
+        db.session.commit()
+
+    except Exception:
+        db.session.rollback()
+        logger.exception(
+            "Failed to upsert real-time zonal LBMP data"
+        )
+        raise
 
 
                 

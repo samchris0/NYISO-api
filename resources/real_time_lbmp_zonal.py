@@ -10,7 +10,7 @@ from nyiso_api.extensions import db
 from nyiso_api.schemas.real_time_lbmp_zonal import RealTimeLBMPZonalIngestion, RealTimeLBMPZonalQuery, RealTimeLBMPZonalValidation
 from nyiso_api.scrape.real_time_lbmp_zonal import scrape_real_time_lbmp_zonal
 from nyiso_api.models.real_time_lbmp_zonal import RealTimeLBMPZonalModel
-from nyiso_api.utils.find_missing_dates import find_missing_dates
+from nyiso_api.utils.get_date_range import get_date_range
 
 """
 Variables returned:
@@ -25,6 +25,25 @@ marginal_cost_congestion: Added cost due to transmission constraints
 logger = logging.getLogger(__name__)
 
 class RealTimeLBMPZonal(Resource):
+    def post(self):
+        payload = request.get_json() or {}
+
+        try:
+            validated = (
+                RealTimeLBMPZonalIngestion()
+                .load(payload)
+            )
+        except ValidationError as error:
+            return {"errors": error.messages}, 400 
+
+        dates = get_date_range(
+            validated["start"],
+            validated["end"],
+        )
+
+        scrape_real_time_lbmp_zonal(dates)      
+    
+
     def get(self):
         # GET filters come from URL query parameters
         query_params = request.args.to_dict()
@@ -40,17 +59,10 @@ class RealTimeLBMPZonal(Resource):
         start = validated['start']
         end = validated['end']
 
-        # Check if the date range is in the database
-        missingDates = find_missing_dates(start, end, RealTimeLBMPZonalModel)
-
-        # Scrape missing data
-        if missingDates:
-            scrape_real_time_lbmp_zonal(missingDates)
-
         query = db.session.query(RealTimeLBMPZonalModel).filter(
             RealTimeLBMPZonalModel.timestamp.between(
-                validated["start"],
-                validated["end"],
+                start,
+                end,
             )
         )
 

@@ -7,6 +7,7 @@ import zipfile
 
 import pandas as pd
 from marshmallow import ValidationError
+from sqlalchemy.dialects.postgresql import insert
 
 from nyiso_api.extensions import db
 from nyiso_api.schemas.load_real_time_integrated import LoadRealTimeIntegratedValidation
@@ -74,13 +75,37 @@ def scrape_load_real_time_integrated(daterange):
 
     try:
         validated_records = LoadRealTimeIntegratedValidation().load(records, many=True)
-    except ValidationError as err:
-        print(err.messages)
+    except ValidationError:
+        logger.exception("Real-time integrated load validation failed")
+        raise
+
+    if not validated_records:
+        logger.info("No real-time integrated load records found for %s", sorted(daterange))
+        return
+
+    validated_records = list({
+        (record["timestamp"], record["name"]): record
+        for record in validated_records
+    }.values())
     
-    events = [LoadRealTimeIntegratedModel(**record) for record in validated_records]
-    
-    db.session.add_all(events)
-    db.session.commit()
+    table = LoadRealTimeIntegratedModel.__table__
+    chunk_size = 5_000
+    try:
+        for offset in range(0, len(validated_records), chunk_size):
+            chunk = validated_records[offset:offset + chunk_size]
+            statement = insert(table).values(chunk)
+            statement = statement.on_conflict_do_update(
+                index_elements=[table.c.timestamp, table.c.name],
+                set_={
+                    "ptid": statement.excluded.ptid,
+                    "integrated_load": statement.excluded.integrated_load,
+                },
+            )
+            db.session.execute(statement)
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+        raise
 
     
 
