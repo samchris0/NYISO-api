@@ -3,12 +3,14 @@ import datetime
 from marshmallow import Schema, fields, validates_schema, ValidationError, RAISE
 
 from nyiso_api.utils.fields import FlexibleDateTimeField
-
+from nyiso_api.utils.time import now_ny
 
 class DayAheadAncillaryQuery(Schema):
     start = FlexibleDateTimeField(required=True)
     
     end = FlexibleDateTimeField(required=True)
+
+
 
     @validates_schema
     def start_after(self, data, **kwargs):
@@ -17,7 +19,13 @@ class DayAheadAncillaryQuery(Schema):
 
     @validates_schema
     def end_before(self, data, **kwargs):
-        end_of_day = datetime.datetime.now().replace(hour=23, minute=59, second=59, microsecond=999999)
+        end_of_day = now_ny().replace(
+            hour=23,
+            minute=59,
+            second=59,
+            microsecond=999999,
+            tzinfo=None,
+        )
         if data['end'] > end_of_day:
              raise ValidationError('Data not available for this end point')
 
