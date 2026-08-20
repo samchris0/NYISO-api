@@ -12,7 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from nyiso_api.extensions import db
 from nyiso_api.schemas.real_time_lbmp_zonal import RealTimeLBMPZonalValidation
 from nyiso_api.models.real_time_lbmp_zonal import RealTimeLBMPZonalModel
-from nyiso_api.utils.time import now_ny
+from nyiso_api.utils.time import now_ny, localize_ptid
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def scrape_real_time_lbmp_zonal(daterange):
             f"{date_string}realtime_zone.csv"
         )
 
-        response = requests.get(url)
+        response = requests.get(url, timeout=60)
         response.raise_for_status()  
 
         data = pd.read_csv(
@@ -72,7 +72,7 @@ def scrape_real_time_lbmp_zonal(daterange):
 
         for url in urls:
 
-            response = requests.get(url)
+            response = requests.get(url, timeout=60)
             response.raise_for_status()
 
             with zipfile.ZipFile(io.BytesIO(response.content)) as z:
@@ -88,6 +88,11 @@ def scrape_real_time_lbmp_zonal(daterange):
                         
                         # Merge new data
                         data = pd.concat([data,df], axis=0)
+
+    data = (
+        data.groupby("PTID", group_keys=False, sort=False)
+        .apply(localize_ptid)
+    )
 
     #Convert records into the correct format
     expected_cols = {
@@ -169,5 +174,3 @@ def scrape_real_time_lbmp_zonal(daterange):
         )
         raise
 
-
-                

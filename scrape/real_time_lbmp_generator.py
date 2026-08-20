@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert
 from nyiso_api.extensions import db
 from nyiso_api.schemas.real_time_lbmp_generator import RealTimeLBMPGeneratorValidation
 from nyiso_api.models.real_time_lbmp_generator import RealTimeLBMPGeneratorModel
+from nyiso_api.utils.time import now_ny, localize_ptid
 
 logger = logging.getLogger(__name__)
 
@@ -23,48 +24,75 @@ def scrape_real_time_lbmp_generator(daterange):
         Args:
             daterange (list, datetimes): List of missing datetimes to scrape
     """
-    year_months_days = set()
-
-    # Get unique year, month, day combos of query
-    for date in daterange:
-        year_months_days.add((date.year, date.strftime("%m"), date.strftime("%d")))
     
-    # Get list of filenames that contain datetimes in query
-    valid_filenames = []
-    for date in year_months_days:
-        valid_filenames.append(str(date[0]) + str(date[1]) + str(date[2]) + "realtime_gen.csv")
+    today = now_ny().date()
 
-    # Get unique year, month combos of query
-    year_months = set()
-    for date in year_months_days:
-        year_months.add((date[0], date[1]))
 
-    # Make a list of URLs that will need to be accessed from year and month combos
-    urls = []
-    for date in year_months:
-        urls.append('https://mis.nyiso.com/public/csv/realtime/' + str(date[0]) + str(date[1]) + '01realtime_gen_csv.zip')
+    if len(daterange) == 1 and daterange == {today}:
+        date = next(iter(daterange))
 
-    data = pd.DataFrame()
+        date_string = date.strftime("%Y%m%d")
 
-    for url in urls:
+        url = (
+            "https://mis.nyiso.com/public/csv/realtime/"
+            f"{date_string}realtime_zone.csv"
+        )
 
-        response = requests.get(url)
-        response.raise_for_status()
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()  
 
-        with zipfile.ZipFile(io.BytesIO(response.content)) as z:
-            for filename in z.namelist():
-                if filename in valid_filenames:
-                    
-                    # Extract file and load data
-                    with z.open(filename) as csv_file:
-                        df = pd.read_csv(
-                            csv_file,
-                            parse_dates=["Time Stamp"],
-                        )
-                    
-                    # Merge new data
-                    data = pd.concat([data,df], axis=0)
+        data = pd.read_csv(
+            io.StringIO(response.text),
+            parse_dates=["Time Stamp"],
+        )
+    
+    else:
+        year_months_days = set()
 
+        # Get unique year, month, day combos of query
+        for date in daterange:
+            year_months_days.add((date.year, date.strftime("%m"), date.strftime("%d")))
+        
+        # Get list of filenames that contain datetimes in query
+        valid_filenames = []
+        for date in year_months_days:
+            valid_filenames.append(str(date[0]) + str(date[1]) + str(date[2]) + "realtime_gen.csv")
+
+        # Get unique year, month combos of query
+        year_months = set()
+        for date in year_months_days:
+            year_months.add((date[0], date[1]))
+
+        # Make a list of URLs that will need to be accessed from year and month combos
+        urls = []
+        for date in year_months:
+            urls.append('https://mis.nyiso.com/public/csv/realtime/' + str(date[0]) + str(date[1]) + '01realtime_gen_csv.zip')
+
+        data = pd.DataFrame()
+
+        for url in urls:
+
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()
+
+            with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+                for filename in z.namelist():
+                    if filename in valid_filenames:
+                        
+                        # Extract file and load data
+                        with z.open(filename) as csv_file:
+                            df = pd.read_csv(
+                                csv_file,
+                                parse_dates=["Time Stamp"],
+                            )
+                        
+                        # Merge new data
+                        data = pd.concat([data,df], axis=0)
+
+    data = (
+        data.groupby("PTID", group_keys=False, sort=False)
+        .apply(localize_ptid)
+    )
 
     #Convert records into the correct format
     expected_cols = {

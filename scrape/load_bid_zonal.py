@@ -41,7 +41,7 @@ def scrape_load_bid_zonal(daterange):
 
     for url in urls:
 
-        response = requests.get(url)
+        response = requests.get(url, timeout=60)
         response.raise_for_status()
 
         with zipfile.ZipFile(io.BytesIO(response.content)) as z:

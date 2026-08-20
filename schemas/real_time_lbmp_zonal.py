@@ -45,7 +45,7 @@ class RealTimeLBMPZonalQuery(Schema):
 
     @validates_schema
     def end_before(self, data, **kwargs):
-        if data['end'] > datetime.datetime.now():
+        if data['end'] > now_ny().replace(tzinfo=None):
              raise ValidationError('Data not available for this end point')
 
     @validates_schema

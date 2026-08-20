@@ -1,7 +1,7 @@
 from nyiso_api.extensions import db
 
 class DayAheadAncillaryModel(db.Model):
-    timestamp = db.Column(db.DateTime, primary_key=True)
+    timestamp = db.Column(db.DateTime(timezone=True), primary_key=True)
     name = db.Column(db.String, primary_key=True)
     ptid = db.Column(db.Integer, nullable=True)
     spinning_reserve_10min = db.Column(db.Float, nullable=True)
