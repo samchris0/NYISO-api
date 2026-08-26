@@ -10,12 +10,44 @@ from marshmallow import ValidationError
 from sqlalchemy.dialects.postgresql import insert
 
 from nyiso_api.extensions import db
+from nyiso_api.utils.standardize_real_time_ancillary_df import standardize_dataframe
 from nyiso_api.schemas.load_real_time_actual import LoadRealTimeActualValidation
 from nyiso_api.models.load_real_time_actual import LoadRealTimeActualModel
+from nyiso_api.utils.time import now_ny, localize_ptid
 
 logger = logging.getLogger(__name__)
 
 def scrape_load_real_time_actual(daterange):
+    
+    today = now_ny().date()
+
+
+    if daterange == {today}:
+
+        date = next(iter(daterange))
+
+        date_string = date.strftime("%Y%m%d")
+
+        url = (
+                "https://mis.nyiso.com/public/csv/pal/"
+                f"{date_string}pal.csv"
+        )
+
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()  
+
+        data = pd.read_csv(
+            io.StringIO(response.text),
+            parse_dates=["Time Stamp"],
+        )
+
+        if 'Time Zone' in data.columns:
+            data = data.drop('Time Zone', axis=1)
+                        
+        data = standardize_dataframe(data)
+
+    else:
+    
     year_months_days = set()
 
     # Get unique year, month, day combos of query

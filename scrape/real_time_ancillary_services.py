@@ -29,7 +29,7 @@ def scrape_real_time_ancillary(daterange):
     today = now_ny().date()
 
 
-    if len(daterange) == 1 and daterange == {today}:
+    if daterange == {today}:
         date = next(iter(daterange))
 
         date_string = date.strftime("%Y%m%d")
