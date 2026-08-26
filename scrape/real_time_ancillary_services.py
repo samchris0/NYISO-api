@@ -150,8 +150,3 @@ def scrape_real_time_ancillary(daterange):
     except Exception:
         db.session.rollback()
         raise
-
-    
-
-
-                

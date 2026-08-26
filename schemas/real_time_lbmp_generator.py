@@ -3,7 +3,7 @@ import datetime
 from marshmallow import Schema, fields, validates_schema, ValidationError, RAISE
 
 from nyiso_api.utils.fields import FlexibleDateTimeField
-from nyiso_api.utils.time import now_ny
+from nyiso_api.utils.time import NY_TIMEZONE, now_ny
 
 class RealTimeLBMPGeneratorQuery(Schema):
     start = FlexibleDateTimeField(required=True)
@@ -14,12 +14,12 @@ class RealTimeLBMPGeneratorQuery(Schema):
 
     @validates_schema
     def start_after(self, data, **kwargs):
-        if data['start'] < datetime.datetime(2007, 12, 1, 0, 0):
+        if data['start'] < datetime.datetime(2007, 12, 1, 0, 0, tzinfo=NY_TIMEZONE):
              raise ValidationError('Data not available for this range. Please select a start time at or after than December 1, 2007, 00:05')
 
     @validates_schema
     def end_before(self, data, **kwargs):
-        if data['end'] > now_ny().replace(tzinfo=None):
+        if data['end'] > now_ny():
              raise ValidationError('Data not available for this end point')
 
     @validates_schema

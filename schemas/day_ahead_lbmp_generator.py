@@ -3,7 +3,7 @@ import datetime
 from marshmallow import Schema, fields, validates_schema, ValidationError, RAISE
 
 from nyiso_api.utils.fields import FlexibleDateTimeField
-from nyiso_api.utils.time import now_ny
+from nyiso_api.utils.time import NY_TIMEZONE, now_ny
 
 class DayAheadLBMPGeneratorQuery(Schema):
     start = FlexibleDateTimeField(required=True)
@@ -14,7 +14,7 @@ class DayAheadLBMPGeneratorQuery(Schema):
 
     @validates_schema
     def start_after(self, data, **kwargs):
-        if data['start'] < datetime.datetime(1999, 11, 18, 0, 0):
+        if data['start'] < datetime.datetime(1999, 11, 18, 0, 0, tzinfo=NY_TIMEZONE):
              raise ValidationError('Data not available for this range. Please select a start time at or greater than November 18, 1999 00:00')
 
     @validates_schema
@@ -24,7 +24,6 @@ class DayAheadLBMPGeneratorQuery(Schema):
             minute=59,
             second=59,
             microsecond=999999,
-            tzinfo=None,
         )
         if data['end'] > end_of_day:
              raise ValidationError('Data not available for this end point')
