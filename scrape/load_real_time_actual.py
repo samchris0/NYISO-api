@@ -90,6 +90,10 @@ def scrape_load_real_time_actual(daterange):
                     # Merge new data
                     data = pd.concat([data,df], axis=0)
 
+    data = (
+        data.groupby("PTID", group_keys=False, sort=False)
+        .apply(localize_ptid)
+    )
 
     #Convert records into the correct format
     expected_cols = {
