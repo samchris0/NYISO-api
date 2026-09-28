@@ -48,47 +48,47 @@ def scrape_load_real_time_actual(daterange):
 
     else:
     
-    year_months_days = set()
+        year_months_days = set()
 
-    # Get unique year, month, day combos of query
-    for date in daterange:
-        year_months_days.add((date.year, date.strftime("%m"), date.strftime("%d")))
-    
-    # Get list of filenames that contain datetimes in query
-    valid_filenames = []
-    for date in year_months_days:
-        valid_filenames.append(str(date[0]) + str(date[1]) + str(date[2]) + "pal.csv")
+        # Get unique year, month, day combos of query
+        for date in daterange:
+            year_months_days.add((date.year, date.strftime("%m"), date.strftime("%d")))
+        
+        # Get list of filenames that contain datetimes in query
+        valid_filenames = []
+        for date in year_months_days:
+            valid_filenames.append(str(date[0]) + str(date[1]) + str(date[2]) + "pal.csv")
 
-    # Get unique year, month combos of query
-    year_months = set()
-    for date in year_months_days:
-        year_months.add((date[0], date[1]))
+        # Get unique year, month combos of query
+        year_months = set()
+        for date in year_months_days:
+            year_months.add((date[0], date[1]))
 
-    # Make a list of URLs that will need to be accessed from year and month combos
-    urls = []
-    for date in year_months:
-        urls.append('https://mis.nyiso.com/public/csv/pal/' + str(date[0]) + str(date[1]) + '01pal_csv.zip')
+        # Make a list of URLs that will need to be accessed from year and month combos
+        urls = []
+        for date in year_months:
+            urls.append('https://mis.nyiso.com/public/csv/pal/' + str(date[0]) + str(date[1]) + '01pal_csv.zip')
 
-    data = pd.DataFrame()
+        data = pd.DataFrame()
 
-    for url in urls:
+        for url in urls:
 
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
+            response = requests.get(url, timeout=60)
+            response.raise_for_status()
 
-        with zipfile.ZipFile(io.BytesIO(response.content)) as z:
-            for filename in z.namelist():
-                if filename in valid_filenames:
-                    
-                    # Extract file and load data
-                    with z.open(filename) as csv_file:
-                        df = pd.read_csv(
-                            csv_file,
-                            parse_dates=["Time Stamp"],
-                        )
+            with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+                for filename in z.namelist():
+                    if filename in valid_filenames:
+                        
+                        # Extract file and load data
+                        with z.open(filename) as csv_file:
+                            df = pd.read_csv(
+                                csv_file,
+                                parse_dates=["Time Stamp"],
+                            )
 
-                    # Merge new data
-                    data = pd.concat([data,df], axis=0)
+                        # Merge new data
+                        data = pd.concat([data,df], axis=0)
 
     data = (
         data.groupby("PTID", group_keys=False, sort=False)

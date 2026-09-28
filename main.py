@@ -35,7 +35,7 @@ def create_app():
 
     with app.app_context():
         # delete all tables, keep in development to allow for changes, remove for deployment
-        db.drop_all()
+        # db.drop_all()
         db.create_all()
 
     ConfigureLogging(app)
